@@ -48,6 +48,9 @@ pub fn (c TcpConn) write_ptr(b byteptr, len int) ? {
 						c.wait_for_write()
 						continue
 					}
+					error_eintr {
+						continue
+					}
 					else {
 						wrap_error(code) ?
 					}
@@ -70,19 +73,24 @@ pub fn (c TcpConn) write_str(s string) ? {
 }
 
 pub fn (c TcpConn) read_ptr(buf_ptr byteptr, len int) ?int {
-	mut res := wrap_read_result(C.recv(c.sock.handle, buf_ptr, len, 0)) ?
-	if res > 0 {
-		return res
-	}
-	code := error_code()
-	match code {
-		error_ewouldblock {
-			c.wait_for_read() ?
-			res = wrap_read_result(C.recv(c.sock.handle, buf_ptr, len, 0)) ?
-			return socket_error(res)
+	mut res := 0
+	for {
+		res = wrap_read_result(C.recv(c.sock.handle, buf_ptr, len, 0)) ?
+		if res > 0 {
+			return res
 		}
-		else {
-			wrap_error(code) ?
+		code := error_code()
+		match code {
+			error_ewouldblock {
+				c.wait_for_read() ?
+				continue
+			}
+			error_eintr {
+				continue
+			}
+			else {
+				wrap_error(code) ?
+			}
 		}
 	}
 }

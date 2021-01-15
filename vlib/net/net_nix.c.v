@@ -23,6 +23,7 @@ pub const (
 
 const (
 	error_ewouldblock = C.EWOULDBLOCK
+	error_eintr = C.EINTR
 )
 
 #flag solaris -lsocket

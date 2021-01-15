@@ -38,18 +38,34 @@ fn @select(handle int, test Select, timeout time.Duration) ?bool {
 		timeval_timeout = &C.timeval(0)
 	}
 
-	match test {
-		.read {
-			socket_error(C.@select(handle+1, &set, C.NULL, C.NULL, timeval_timeout))?
+	for {
+		mut potential_code := 0
+		match test {
+			.read {
+				potential_code = C.@select(handle+1, &set, C.NULL, C.NULL, timeval_timeout)
+			}
+			.write {
+				potential_code = C.@select(handle+1, C.NULL, &set, C.NULL, timeval_timeout)
+			}
+			.except {
+				potential_code = C.@select(handle+1, C.NULL, C.NULL, &set, timeval_timeout)
+			}
 		}
-		.write {
-			socket_error(C.@select(handle+1, C.NULL, &set, C.NULL, timeval_timeout))?
-		}
-		.except {
-			socket_error(C.@select(handle+1, C.NULL, C.NULL, &set, timeval_timeout))?
+		if potential_code < 0 {
+			code := error_code()
+			match code {
+				error_eintr {
+					continue
+				}
+				else {
+					wrap_error(code) ?
+				}
+			}
+		} else {
+			break
 		}
 	}
-
+	
 	return C.FD_ISSET(handle, &set)
 }
 
