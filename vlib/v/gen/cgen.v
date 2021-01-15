@@ -5654,7 +5654,10 @@ fn (mut g Gen) go_stmt(node ast.GoStmt) {
 		g.writeln('CreateThread(0,0, (LPTHREAD_START_ROUTINE)$wrapper_fn_name, $arg_tmp_var, 0,0);')
 	} else {
 		g.writeln('pthread_t thread_$tmp;')
-		g.writeln('pthread_create(&thread_$tmp, NULL, (void*)$wrapper_fn_name, $arg_tmp_var);')
+		g.writeln('pthread_attr_t thread_attr_$tmp;')
+		g.writeln('pthread_attr_init(&thread_attr_$tmp);')
+		g.writeln('pthread_attr_setdetachstate(&thread_attr_$tmp, PTHREAD_CREATE_DETACHED);')
+		g.writeln('pthread_create(&thread_$tmp, &thread_attr_$tmp, (void*)$wrapper_fn_name, $arg_tmp_var);')
 	}
 	g.writeln('// endgo\n')
 	// Register the wrapper type and function
