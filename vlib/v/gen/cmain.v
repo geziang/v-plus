@@ -52,6 +52,11 @@ fn (mut g Gen) gen_c_main_function_header() {
 	} else {
 		g.writeln('int main(int ___argc, char** ___argv){')
 	}
+	g.writeln('\tGC_set_free_space_divisor(3);')
+	g.writeln('\tGC_set_dont_precollect(1);')
+	g.writeln('\tGC_set_dont_expand(1);')
+	g.writeln('\tGC_init();')
+	g.writeln('\tGC_allow_register_threads();')
 }
 
 fn (mut g Gen) gen_c_main_header() {

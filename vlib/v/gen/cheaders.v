@@ -92,6 +92,13 @@ const (
 		#define V64_PRINTFORMAT "0x%llx"
 	#endif
 #endif
+
+#define GC_THREADS
+#include "gc.h"
+#define malloc(n) GC_malloc_atomic(n)
+#define calloc(m,n) GC_malloc((m)*(n))
+#define realloc(ptr,n) GC_realloc((ptr),(n))
+#define free(ptr) GC_free(ptr)
 '
 	c_headers = '
 // c_headers
